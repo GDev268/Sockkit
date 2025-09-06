@@ -40,8 +40,6 @@ mod tests {
     use crate::tcpclient::TcpClient;
     use crate::tcpserver::TcpServer;
     use std::net::{IpAddr, Ipv4Addr};
-    use flume::unbounded;
-    use crate::client::RawPacket;
     use uflow::SendMode;
     use uflow::server::Config;
     use crate::udpclient::UdpClient;
