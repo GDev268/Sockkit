@@ -3,14 +3,14 @@
 use bytes::{Bytes, BytesMut};
 
 pub(crate) mod utils;
-pub(crate) mod tcpclient;
-mod tcpstream;
-mod tcpserver;
-mod udpclient;
+pub mod tcpclient;
+pub mod tcpstream;
+pub mod tcpserver;
+pub mod udpclient;
 mod bytechannel;
-mod udpstream;
+pub mod udpstream;
 mod backpressurebuffer;
-mod udpserver;
+pub mod udpserver;
 
 #[derive(Debug)]
 pub enum ReadError {
