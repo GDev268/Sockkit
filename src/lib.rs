@@ -11,7 +11,7 @@ mod bytechannel;
 pub mod udpstream;
 mod backpressurebuffer;
 pub mod udpserver;
-mod errors;
+pub mod errors;
 
 #[derive(Debug)]
 pub enum ReadError {
