@@ -1,5 +1,6 @@
 use crate::bytechannel::{ByteMode, ByteReader, ByteWriter, byte_channel};
-use crate::utils::{RawPacket, ReadError, WriteError};
+use crate::errors::{ReadError, WriteError};
+use crate::utils::RawPacket;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use flume::{Receiver, Sender};
 use std::collections::VecDeque;

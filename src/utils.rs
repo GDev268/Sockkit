@@ -1,18 +1,6 @@
 use std::sync::Arc;
 use uflow::SendMode;
 
-#[derive(Debug)]
-pub(crate) enum ReadError {
-    EmptyBuffer,
-    FailedToRead(std::io::Error)
-}
-
-#[derive(Debug)]
-pub(crate) enum WriteError {
-    EmptyBuffer,
-    FailedToWrite(std::io::Error)
-}
-
 #[derive(Debug, Clone)]
 pub(crate) struct RawPacket {
     pub(crate) channel_id: usize,

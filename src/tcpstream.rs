@@ -2,7 +2,7 @@ use std::net::SocketAddr;
 use bytes::{Bytes, BytesMut};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream as TokioTcpStream;
-use crate::utils::{ReadError, WriteError};
+use crate::errors::{ReadError, WriteError};
 
 const READ_BUF_SIZE: usize = 1024;
 
