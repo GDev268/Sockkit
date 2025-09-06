@@ -2,10 +2,9 @@
 
 use bytes::{Bytes, BytesMut};
 
-pub(crate) mod client;
+pub(crate) mod utils;
 pub(crate) mod tcpclient;
 mod tcpstream;
-mod server;
 mod tcpserver;
 mod udpclient;
 mod bytechannel;
@@ -36,7 +35,6 @@ mod tests {
     use std::thread;
     use bytes::Bytes;
     use tokio::time::{timeout, Duration};
-    use crate::server::Server;
     use crate::tcpclient::TcpClient;
     use crate::tcpserver::TcpServer;
     use std::net::{IpAddr, Ipv4Addr};
@@ -57,7 +55,7 @@ mod tests {
 
         // Spawn server task to accept one client and echo back
         let server_task = tokio::spawn(async move {
-            let mut stream = server.new_client().await.unwrap();
+            let mut stream = server.get_new_client().await.unwrap();
 
             let received = stream.recv().await.unwrap();
             assert_eq!(received, "hello".as_bytes());
@@ -94,7 +92,7 @@ mod tests {
         let server_task = tokio::spawn(async move {
             for id in 0..CLIENTS {
                 println!("[SERVER] waiting for client {id}");
-                let mut stream = server.new_client().await.unwrap();
+                let mut stream = server.get_new_client().await.unwrap();
                 println!("[SERVER] client {id} connected");
 
                 tokio::spawn(async move {

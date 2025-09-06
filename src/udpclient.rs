@@ -1,5 +1,5 @@
 use crate::bytechannel::{ByteMode, ByteReader, ByteWriter, byte_channel};
-use crate::client::{RawPacket, ReadError, WriteError};
+use crate::utils::{RawPacket, ReadError, WriteError};
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use flume::{Receiver, Sender};
 use std::collections::VecDeque;
@@ -26,7 +26,7 @@ const HEADER_DATA_SIZE: usize = 6;
 const PAYLOAD_DATA_SIZE:usize = 4;
 
 
-pub(crate) struct UdpClient {
+pub struct UdpClient {
     packets_in_recv: ByteReader,
     packets_out_send: ByteWriter,
     send_buf: Arc<SegQueue<BytesMut>>,
@@ -36,7 +36,7 @@ pub(crate) struct UdpClient {
 }
 
 impl UdpClient {
-    pub(crate) async fn new(
+    pub async fn new(
         server_addr: SocketAddr,
         config: uflow::client::Config,
     ) -> Result<Self, std::io::Error> {
@@ -203,7 +203,7 @@ impl UdpClient {
         Some(RawPacket { channel_id, send_mode, payload })
     }
 
-    pub(crate) async fn recv(&mut self) -> Result<BytesMut, ReadError> {
+    pub async fn recv(&mut self) -> Result<BytesMut, ReadError> {
         match self.packets_in_recv.read_async().await {
             Ok(bytes) => Ok(bytes),
             Err(crate::bytechannel::ReadError::Empty) => Err(ReadError::EmptyBuffer),
@@ -213,7 +213,7 @@ impl UdpClient {
         }
     }
 
-    pub(crate) async fn send(
+    pub async fn send(
         &mut self,
         bytes: Bytes,
         channel_id: u8,

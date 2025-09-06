@@ -1,4 +1,3 @@
-use crate::server::Server;
 use crate::tcpstream::TcpStream;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
@@ -13,15 +12,11 @@ impl TcpServer {
 
         Ok(TcpServer { tcp_listener })
     }
-}
 
-impl Server for TcpServer {
-    type StreamType = TcpStream;
-
-    async fn new_client(&mut self) -> Result<Self::StreamType, std::io::Error> {
+    pub async fn get_new_client(&mut self) -> Option<TcpStream> {
         match self.tcp_listener.accept().await {
-            Ok((socket, addr)) => Ok(TcpStream::new(addr, socket)),
-            Err(e) => Err(e),
+            Ok((socket, addr)) => Some(TcpStream::new(addr, socket)),
+            Err(..) => None,
         }
     }
 }

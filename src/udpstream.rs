@@ -1,5 +1,5 @@
 use crate::bytechannel::{ByteMode, ByteReader, ByteWriter, byte_channel};
-use crate::client::{RawPacket, ReadError, WriteError};
+use crate::utils::{RawPacket, ReadError, WriteError};
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use crossbeam::queue::SegQueue;
 use flume::{Receiver, Sender};
@@ -22,7 +22,7 @@ const HEADER_DATA_SIZE: usize = 6;
 const PAYLOAD_DATA_SIZE: usize = 4;
 
 #[derive(Debug)]
-pub(crate) struct UdpStream {
+pub struct UdpStream {
     packets_in_recv: ByteReader,
     packets_out_send: ByteWriter,
     send_buf: Arc<SegQueue<BytesMut>>,
@@ -32,7 +32,7 @@ pub(crate) struct UdpStream {
 }
 
 impl UdpStream {
-    pub(crate) fn new(
+    pub fn new(
         addr: SocketAddr,
         stream_tx: Sender<(SocketAddr,RawPacket)>,
         stream_rx: Receiver<Event>,
@@ -149,7 +149,7 @@ impl UdpStream {
         }
     }
 
-    pub(crate) async fn recv(&mut self) -> Result<BytesMut, ReadError> {
+    pub async fn recv(&mut self) -> Result<BytesMut, ReadError> {
         match self.packets_in_recv.read_async().await {
             Ok(bytes) => Ok(bytes),
             Err(crate::bytechannel::ReadError::Empty) => Err(ReadError::EmptyBuffer),
@@ -159,7 +159,7 @@ impl UdpStream {
         }
     }
 
-    pub(crate) async fn send(
+    pub async fn send(
         &mut self,
         bytes: Bytes,
         channel_id: u8,

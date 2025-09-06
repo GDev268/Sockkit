@@ -14,20 +14,20 @@ use std::time::Duration;
 use tokio::runtime::Handle;
 use uflow::SendMode;
 use uflow::server::{RemoteClient, Config,Server};
-use crate::client::RawPacket;
+use crate::utils::RawPacket;
 
 const MAX_PACKET_SIZE: usize = 16 * 1024;
 const MIN_THREAD_SLEEP_TIME: Duration = Duration::from_micros(500);
 const MAX_THREAD_SLEEP_TIME: Duration = Duration::from_millis(5);
 
-pub(crate) struct UdpServer {
+pub struct UdpServer {
     new_clients: Receiver<UdpStream>,
     disconnected: Arc<AtomicBool>,
     thread_handle: JoinHandle<()>,
 }
 
 impl UdpServer {
-    pub(crate) async fn new(addr: SocketAddr, config: Config) -> UdpServer {
+    pub async fn new(addr: SocketAddr, config: Config) -> UdpServer {
         let (client_tx,client_rx) = flume::unbounded();
         let disconnected = Arc::new(AtomicBool::new(false));
         let disconnected_clone = disconnected.clone();
@@ -45,7 +45,7 @@ impl UdpServer {
         }
     }
 
-    pub(crate) fn listening_loop(mut server: Server, new_clients: Sender<UdpStream>, disconnected: Arc<AtomicBool>, handle: tokio::runtime::Handle) {
+    fn listening_loop(mut server: Server, new_clients: Sender<UdpStream>, disconnected: Arc<AtomicBool>, handle: tokio::runtime::Handle) {
         let (packet_tx, packet_rx) = flume::bounded::<(SocketAddr,RawPacket)>(MAX_PACKET_SIZE);
 
         let clients = DashMap::new();
@@ -123,11 +123,11 @@ impl UdpServer {
         (event_tx, UdpStream::new(addr,packet_tx,event_rx,handle))
     }
 
-    pub(crate) fn get_new_client(&mut self) -> Option<UdpStream>{
+    pub fn get_new_client(&mut self) -> Option<UdpStream>{
         self.new_clients.try_recv().ok()
     }
 
-    pub(crate) fn is_disconnected(&self) -> bool {
+    pub fn is_disconnected(&self) -> bool {
         self.disconnected.load(SeqCst)
     }
 }

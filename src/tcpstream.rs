@@ -2,21 +2,21 @@ use std::net::SocketAddr;
 use bytes::{Bytes, BytesMut};
 use tokio::io::{AsyncReadExt, AsyncWriteExt};
 use tokio::net::TcpStream as TokioTcpStream;
-use crate::client::{ReadError, WriteError};
+use crate::utils::{ReadError, WriteError};
 
 const READ_BUF_SIZE: usize = 1024;
 
-pub(crate) struct TcpStream {
+pub struct TcpStream {
     addr: SocketAddr,
     stream: TokioTcpStream,
 }
 
 impl TcpStream {
-    pub(crate) fn new(addr: SocketAddr, stream: TokioTcpStream) -> Self {
+    pub fn new(addr: SocketAddr, stream: TokioTcpStream) -> Self {
         Self { addr, stream }
     }
 
-    pub(crate) async fn recv(&mut self) -> Result<BytesMut, ReadError> {
+    pub async fn recv(&mut self) -> Result<BytesMut, ReadError> {
         let mut buffer = BytesMut::with_capacity(READ_BUF_SIZE);
         buffer.resize(READ_BUF_SIZE, 0);
 
@@ -30,7 +30,7 @@ impl TcpStream {
         Ok(buffer)
     }
 
-    pub(crate) async fn send(&mut self, bytes: Bytes) -> Result<(), WriteError> {
+    pub async fn send(&mut self, bytes: Bytes) -> Result<(), WriteError> {
         if bytes.is_empty() {
             return Err(WriteError::EmptyBuffer);
         }
