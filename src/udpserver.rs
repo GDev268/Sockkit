@@ -1,7 +1,7 @@
 use crate::udpstream::UdpStream;
 use crossbeam::queue::SegQueue;
 use dashmap::DashMap;
-use flume::{Receiver, Sender};
+use flume::{Receiver, Sender, TryRecvError};
 use std::cell::RefCell;
 use std::net::SocketAddr;
 use std::rc::Rc;
@@ -20,8 +20,14 @@ const MAX_PACKET_SIZE: usize = 16 * 1024;
 const MIN_THREAD_SLEEP_TIME: Duration = Duration::from_micros(500);
 const MAX_THREAD_SLEEP_TIME: Duration = Duration::from_millis(5);
 
+#[derive(Debug, PartialEq)]
+pub enum UdpServerError {
+    UflowError(uflow::server::ErrorType),
+    ChannelClosed,
+}
+
 pub struct UdpServer {
-    new_clients: Receiver<UdpStream>,
+    new_clients: Receiver<(SocketAddr,Result<UdpStream,uflow::server::ErrorType>)>,
     disconnected: Arc<AtomicBool>,
     thread_handle: JoinHandle<()>,
 }
@@ -45,7 +51,7 @@ impl UdpServer {
         }
     }
 
-    fn listening_loop(mut server: Server, new_clients: Sender<UdpStream>, disconnected: Arc<AtomicBool>, handle: tokio::runtime::Handle) {
+    fn listening_loop(mut server: Server, new_clients: Sender<(SocketAddr,Result<UdpStream,uflow::server::ErrorType>)>, disconnected: Arc<AtomicBool>, handle: tokio::runtime::Handle) {
         let (packet_tx, packet_rx) = flume::bounded::<(SocketAddr,RawPacket)>(MAX_PACKET_SIZE);
 
         let clients = DashMap::new();
@@ -64,7 +70,7 @@ impl UdpServer {
 
                         clients.insert(addr, event_tx);
 
-                        if let Err(e) = new_clients.send(stream) {
+                        if let Err(e) = new_clients.send((addr,Ok(stream))) {
                             clients.remove(&addr);
                         }
                     }
@@ -92,6 +98,8 @@ impl UdpServer {
                         if let Some(event_sender) = clients.get(&addr) {
                             let _ = event_sender.send(uflow::client::Event::Error(e));
                         }
+
+                        let _ = new_clients.send((addr,Err(error)));
                     }
                 }
             }
@@ -116,15 +124,25 @@ impl UdpServer {
     fn create_new_client(
         addr: SocketAddr,
         packet_tx: Sender<(SocketAddr,RawPacket)>,
-        handle: tokio::runtime::Handle
+        handle: Handle
     ) -> (Sender<uflow::client::Event>, UdpStream) {
         let (event_tx, event_rx) = flume::unbounded();
 
         (event_tx, UdpStream::new(addr,packet_tx,event_rx,handle))
     }
 
-    pub fn get_new_client(&mut self) -> Option<UdpStream>{
-        self.new_clients.try_recv().ok()
+    pub fn get_new_client(&mut self) -> Option<(SocketAddr, Result<UdpStream, UdpServerError>)> {
+        match self.new_clients.try_recv() {
+            Ok((addr, result)) => Some((
+                addr,
+                result.map_err(UdpServerError::UflowError),
+            )),
+            Err(TryRecvError::Empty) => None,
+            Err(TryRecvError::Disconnected) => Some((
+                "0.0.0.0:0".parse().unwrap(),
+                Err(UdpServerError::ChannelClosed),
+            )),
+        }
     }
 
     pub fn is_disconnected(&self) -> bool {
