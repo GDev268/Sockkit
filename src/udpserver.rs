@@ -147,17 +147,16 @@ impl UdpServer {
     }
 
     pub async fn get_new_client(&mut self) -> (SocketAddr, Result<UdpStream, UdpServerError>) {
-        while let Ok((addr, result)) = self.new_clients.recv_async().await {
-            return (
+        match self.new_clients.recv_async().await {
+            Ok((addr, result)) => (
                 addr,
                 result.map_err(UdpServerError::UflowError),
-            );
+            ),
+            Err(_) => (
+                "0.0.0.0:0".parse().unwrap(),
+                Err(UdpServerError::ChannelClosed),
+            ),
         }
-
-        (
-            "0.0.0.0:0".parse().unwrap(),
-            Err(UdpServerError::ChannelClosed),
-        )
     }
 
     pub fn is_disconnected(&self) -> bool {
