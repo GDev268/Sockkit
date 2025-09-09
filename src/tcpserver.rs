@@ -7,12 +7,12 @@ pub enum TcpServerError {
     IoError(std::io::Error),
 }
 
-pub(crate) struct TcpServer {
+pub struct TcpServer {
     pub(crate) tcp_listener: TcpListener,
 }
 
 impl TcpServer {
-    pub(crate) async fn new(addr: SocketAddr) -> Result<TcpServer, std::io::Error> {
+    pub async fn new(addr: SocketAddr) -> Result<TcpServer, std::io::Error> {
         let tcp_listener = TcpListener::bind(addr).await?;
 
         Ok(TcpServer { tcp_listener })

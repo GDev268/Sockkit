@@ -191,8 +191,8 @@ mod tests {
 
         // 3. Retrieve the new client from the server
         let mut server_stream: UdpStream = loop {
-            if let Some(client) = server.get_new_client() {
-                break client;
+            if let (_addr,Ok(stream)) = server.get_new_client().await {
+                break stream;
             }
             tokio::time::sleep(Duration::from_millis(1)).await;
         };
@@ -273,7 +273,7 @@ mod tests {
         // 3. Server accepts clients and echoes back
         let mut server_streams = Vec::new();
         while server_streams.len() < NUM_CLIENTS {
-            if let Some(stream) = server.get_new_client() {
+            if let (_addr,Ok(stream)) = server.get_new_client().await {
                 server_streams.push(stream);
             } else {
                 sleep(Duration::from_millis(10)).await;
