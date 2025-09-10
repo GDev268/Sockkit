@@ -8,6 +8,7 @@ use std::collections::VecDeque;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::Ordering::SeqCst;
 use std::thread;
 use std::time::Duration;
 use uflow::client::{ErrorType, Event};
@@ -191,6 +192,10 @@ impl UdpStream {
         self.send_buf.push(buffer);
 
         result
+    }
+
+    pub(crate) fn is_disconnected(&self) -> bool {
+        self.disconnected.load(SeqCst)
     }
 
     fn encode_send_mode(mode: SendMode) -> u8 {

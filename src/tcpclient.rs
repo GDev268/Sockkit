@@ -41,4 +41,13 @@ impl TcpClient {
             .await
             .map_err(WriteError::FailedToWrite)
     }
+
+    pub async fn is_disconnected(&self) -> bool {
+        let mut buf = [0u8; 1];
+        match self.stream.peek(&mut buf).await {
+            Ok(0) => true,
+            Ok(_) => false,
+            Err(_) => true,
+        }
+    }
 }
