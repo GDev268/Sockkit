@@ -245,7 +245,7 @@ impl UdpClient {
         result
     }
 
-    pub(crate) fn is_disconnected(&self) -> bool {
+    pub fn is_disconnected(&self) -> bool {
         self.disconnected.load(SeqCst)
     }
 
